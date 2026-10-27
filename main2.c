@@ -36,6 +36,13 @@
 
 #define X_ADDR 0x32
 #define MAG_ADDR 0x3C
+#define CTRL_REG1_A 0x20
+#define OUT_X_L_A 0x28
+#define OUT_X_H_A 0x29
+#define OUT_Y_L_A 0x2A
+#define OUT_Y_H_A 0x2B
+#define OUT_Z_L_A 0x2C
+#define OUT_Z_H_A 0x2D
 
 /* USER CODE END PD */
 
@@ -107,6 +114,13 @@ int main(void)
   /* USER CODE BEGIN 2 */
   printf("\r\nHello from Nucelo-L4R5ZI-P!\r\n");
 
+  // CTRL_REG1_A
+  uint8_t data = 0x17;
+  uint8_t val = 0;
+  HAL_I2C_Mem_Write(&hi2c1, X_ADDR, CTRL_REG1_A,I2C_MEMADD_SIZE_8BIT, &data, 1, HAL_MAX_DELAY);
+  HAL_I2C_Mem_Read(&hi2c1, X_ADDR, CTRL_REG1_A, I2C_MEMADD_SIZE_8BIT, &val,  1, HAL_MAX_DELAY);
+  printf("CTRL_REG1_A value: 0x%02X\r\n", val);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -116,20 +130,26 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
-	// WHO_AM_I_A
- 	 uint8_t regA = 0x0F;
 	 uint8_t valA = 0;
-	 HAL_I2C_Master_Transmit(&hi2c1, X_ADDR, &regA, 1, HAL_MAX_DELAY);
-	 HAL_I2C_Master_Receive(&hi2c1, X_ADDR, &valA, 1, HAL_MAX_DELAY);
-	 printf("WHO_AM_I_A value: 0x%02X\r\n", valA);
+	 uint8_t valB = 0;
+	 HAL_I2C_Mem_Read(&hi2c1, X_ADDR, OUT_X_L_A, I2C_MEMADD_SIZE_8BIT, &valA,  1, HAL_MAX_DELAY);
+	 HAL_I2C_Mem_Read(&hi2c1, X_ADDR, OUT_X_H_A, I2C_MEMADD_SIZE_8BIT, &valB,  1, HAL_MAX_DELAY);
+	 int16_t valFinal = valA | (valB << 8);
+	 float g_value = (valFinal >> 6) * 3.9 / 1000.0;
+	 printf("X axis raw value: %d, X axis g value: %f\r\n", valFinal, g_value);
 
-	 // WHO_AM_I_M
-	 uint8_t regM = 0x4F;
-	 uint8_t valM = 0;
-	 HAL_I2C_Master_Transmit(&hi2c1, MAG_ADDR, &regM, 1, HAL_MAX_DELAY);
-	 HAL_I2C_Master_Receive(&hi2c1, MAG_ADDR, &valM, 1, HAL_MAX_DELAY);
-	 printf("WHO_AM_I_M value: 0x%02X\r\n", valM);
+	 HAL_I2C_Mem_Read(&hi2c1, X_ADDR, OUT_Y_L_A, I2C_MEMADD_SIZE_8BIT, &valA,  1, HAL_MAX_DELAY);
+	 HAL_I2C_Mem_Read(&hi2c1, X_ADDR, OUT_Y_H_A, I2C_MEMADD_SIZE_8BIT, &valB,  1, HAL_MAX_DELAY);
+	 valFinal = valA | (valB << 8);
+	 g_value = (valFinal >> 6) * 3.9 / 1000.0;
+	 printf("Y axis raw value: %d, Y axis g value: %f\r\n", valFinal, g_value);
+
+	 HAL_I2C_Mem_Read(&hi2c1, X_ADDR, OUT_Z_L_A, I2C_MEMADD_SIZE_8BIT, &valA,  1, HAL_MAX_DELAY);
+	 HAL_I2C_Mem_Read(&hi2c1, X_ADDR, OUT_Z_H_A, I2C_MEMADD_SIZE_8BIT, &valB,  1, HAL_MAX_DELAY);
+	 valFinal = valA | (valB << 8);
+	 g_value = (valFinal >> 6) * 3.9 / 1000.0;
+	 printf("Z axis raw value: %d, Z axis g value: %f\r\n", valFinal, g_value);
+
 
 	 HAL_Delay(500);
   }
